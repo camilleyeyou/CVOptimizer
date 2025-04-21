@@ -1,0 +1,36 @@
+{
+  "name": "cv-optimizer",
+  "version": "0.1.0",
+  "description": "Smart resume builder with ATS optimization",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "start": "node backend/src/index.js",
+    "server": "nodemon backend/src/index.js",
+    "client": "cd frontend && npm start",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "build": "cd frontend && npm run build",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "resume",
+    "cv",
+    "job",
+    "ats",
+    "optimization"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
