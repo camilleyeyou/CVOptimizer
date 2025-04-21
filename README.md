@@ -1,3 +1,4 @@
+HEAD
 # CVOptimizer - Smart Resume Builder
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -40,3 +41,6 @@ Visit `http://localhost:3000` to see the application.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+# CVOptimizer
+ 6e2fb565c83b9d81b69d1e0208c2967acf62f0df
