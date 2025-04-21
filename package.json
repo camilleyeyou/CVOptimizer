@@ -8,13 +8,21 @@
     "backend"
   ],
   "scripts": {
-    "start": "node backend/src/index.js",
-    "server": "nodemon backend/src/index.js",
-    "client": "cd frontend && npm start",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "build": "cd frontend && npm run build",
-    "test": "jest",
-    "lint": "eslint ."
+    "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+    "start:frontend": "cd frontend && npm start",
+    "start:backend": "cd backend && npm start",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "cd frontend && npm test",
+    "test:backend": "cd backend && npm test",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint"
   },
   "keywords": [
     "resume",
@@ -26,7 +34,7 @@
   "author": "Your Name <your.email@example.com>",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2",
+    "concurrently": "^8.0.1",
     "husky": "^8.0.3",
     "lint-staged": "^13.2.1"
   },
