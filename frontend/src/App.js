@@ -7,7 +7,13 @@ import LandingPage from './pages/Landing';
 import LoginPage from './pages/Auth/Login';
 import RegisterPage from './pages/Auth/Register';
 import DashboardPage from './pages/Dashboard';
+import CVEditorPage from './pages/CVEditor';
+import CVPreviewPage from './pages/CVPreview';
+import SettingsPage from './pages/Settings';
+import SubscriptionPage from './pages/Subscription';
 import NotFoundPage from './pages/NotFound';
+import ForgotPasswordPage from './pages/Auth/ForgotPassword';
+import ResetPasswordPage from './pages/Auth/ResetPassword';
 
 // Components
 import Layout from './components/shared/Layout';
@@ -47,12 +53,54 @@ function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
       <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
+      <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPasswordPage /> : <Navigate to="/dashboard" />} />
+      <Route path="/reset-password/:token" element={!isAuthenticated ? <ResetPasswordPage /> : <Navigate to="/dashboard" />} />
       
       {/* Protected routes */}
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Layout>
             <DashboardPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/cv/create" element={
+        <ProtectedRoute>
+          <Layout>
+            <CVEditorPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/cv/edit/:id" element={
+        <ProtectedRoute>
+          <Layout>
+            <CVEditorPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/cv/preview/:id" element={
+        <ProtectedRoute>
+          <Layout>
+            <CVPreviewPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Layout>
+            <SettingsPage />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      
+      <Route path="/subscription" element={
+        <ProtectedRoute>
+          <Layout>
+            <SubscriptionPage />
           </Layout>
         </ProtectedRoute>
       } />

@@ -1,12 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  AppBar,
   Box,
-  Toolbar,
-  IconButton,
-  Typography,
   Drawer,
   List,
   ListItem,
@@ -15,22 +11,22 @@ import {
   ListItemButton,
   Divider,
   Container,
-  Avatar,
-  Menu,
-  MenuItem,
+  Toolbar,
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
   Dashboard as DashboardIcon,
-  Description as DescriptionIcon,
   Settings as SettingsIcon,
   Subscriptions as SubscriptionsIcon,
   Add as AddIcon,
   Logout as LogoutIcon,
-  ChevronLeft as ChevronLeftIcon,
 } from '@mui/icons-material';
-import { toggleSidebar } from '../../store/slices/uiSlice';
-import { clearCredentials } from '../../store/slices/authSlice';
+
+import Header from './Header';
+import Footer from './Footer';
+import Notification from './Notification';
+import ConfirmDialog from './ConfirmDialog';
+
+import { logoutUser } from '../../store/slices/authSlice';
 
 // Drawer width
 const drawerWidth = 240;
@@ -39,23 +35,9 @@ const Layout = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { sidebarOpen } = useSelector((state) => state.ui);
-  const { user } = useSelector((state) => state.auth);
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const handleDrawerToggle = () => {
-    dispatch(toggleSidebar());
-  };
-
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleLogout = () => {
-    dispatch(clearCredentials());
+    dispatch(logoutUser());
     navigate('/login');
   };
 
@@ -84,74 +66,9 @@ const Layout = ({ children }) => {
   ];
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      {/* App Bar */}
-      <AppBar
-        position="fixed"
-        sx={{
-          zIndex: (theme) => theme.zIndex.drawer + 1,
-          transition: (theme) => theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          ...(sidebarOpen && {
-            width: `calc(100% - ${drawerWidth}px)`,
-            marginLeft: `${drawerWidth}px`,
-            transition: (theme) => theme.transitions.create(['margin', 'width'], {
-              easing: theme.transitions.easing.easeOut,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
-          }),
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2 }}
-          >
-            {sidebarOpen ? <ChevronLeftIcon /> : <MenuIcon />}
-          </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            CV Optimizer
-          </Typography>
-          <Box>
-            <IconButton
-              aria-label="account of current user"
-              aria-controls="menu-appbar"
-              aria-haspopup="true"
-              onClick={handleMenu}
-              color="inherit"
-            >
-              <Avatar>
-                {user?.name?.charAt(0) || 'U'}
-              </Avatar>
-            </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorEl}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'right',
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-              }}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-            >
-              <MenuItem onClick={() => navigate('/settings')}>Profile</MenuItem>
-              <MenuItem onClick={() => navigate('/subscription')}>Subscription</MenuItem>
-              <Divider />
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
+      {/* Header */}
+      <Header />
 
       {/* Sidebar / Drawer */}
       <Drawer
@@ -167,7 +84,7 @@ const Layout = ({ children }) => {
         anchor="left"
         open={sidebarOpen}
       >
-        <Toolbar />
+        <Toolbar /> {/* Add space for the app bar */}
         <Box sx={{ overflow: 'auto' }}>
           <List>
             {navItems.map((item) => (
@@ -219,9 +136,16 @@ const Layout = ({ children }) => {
           }),
         }}
       >
-        <Toolbar /> {/* Add toolbar spacing */}
-        <Container maxWidth="xl">{children}</Container>
+        <Toolbar /> {/* Add space for the app bar */}
+        <Container maxWidth="xl" sx={{ mb: 4 }}>{children}</Container>
+        <Footer />
       </Box>
+      
+      {/* Global notification */}
+      <Notification />
+      
+      {/* Global confirmation dialog */}
+      <ConfirmDialog />
     </Box>
   );
 };
