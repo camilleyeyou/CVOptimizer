@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { Box } from '@mui/material';
 
 // Pages
 import LandingPage from './pages/Landing';
@@ -17,7 +18,6 @@ import ResetPasswordPage from './pages/Auth/ResetPassword';
 
 // Components
 import Layout from './components/shared/Layout';
-import ProtectedRoute from './components/auth/ProtectedRoute';
 
 // Actions
 import { checkAuth } from './store/slices/authSlice';
@@ -26,14 +26,15 @@ function App() {
   const dispatch = useDispatch();
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
 
-  // Check if user is authenticated on app load
+  // Check if user is authenticated on app load - only once
   useEffect(() => {
     dispatch(checkAuth());
-  }, [dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array to run only once
 
   if (isLoading) {
     return (
-      <div style={{ 
+      <Box sx={{ 
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
@@ -43,7 +44,7 @@ function App() {
       }}>
         <div className="loader"></div>
         <p>Loading CV Optimizer...</p>
-      </div>
+      </Box>
     );
   }
 
@@ -51,58 +52,70 @@ function App() {
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
-      <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
-      <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPasswordPage /> : <Navigate to="/dashboard" />} />
-      <Route path="/reset-password/:token" element={!isAuthenticated ? <ResetPasswordPage /> : <Navigate to="/dashboard" />} />
+      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPasswordPage /> : <Navigate to="/dashboard" replace />} />
+      <Route path="/reset-password/:token" element={!isAuthenticated ? <ResetPasswordPage /> : <Navigate to="/dashboard" replace />} />
       
       {/* Protected routes */}
       <Route path="/dashboard" element={
-        <ProtectedRoute>
+        isAuthenticated ? (
           <Layout>
             <DashboardPage />
           </Layout>
-        </ProtectedRoute>
+        ) : (
+          <Navigate to="/login" replace />
+        )
       } />
       
       <Route path="/cv/create" element={
-        <ProtectedRoute>
+        isAuthenticated ? (
           <Layout>
             <CVEditorPage />
           </Layout>
-        </ProtectedRoute>
+        ) : (
+          <Navigate to="/login" replace />
+        )
       } />
       
       <Route path="/cv/edit/:id" element={
-        <ProtectedRoute>
+        isAuthenticated ? (
           <Layout>
             <CVEditorPage />
           </Layout>
-        </ProtectedRoute>
+        ) : (
+          <Navigate to="/login" replace />
+        )
       } />
       
       <Route path="/cv/preview/:id" element={
-        <ProtectedRoute>
+        isAuthenticated ? (
           <Layout>
             <CVPreviewPage />
           </Layout>
-        </ProtectedRoute>
+        ) : (
+          <Navigate to="/login" replace />
+        )
       } />
       
       <Route path="/settings" element={
-        <ProtectedRoute>
+        isAuthenticated ? (
           <Layout>
             <SettingsPage />
           </Layout>
-        </ProtectedRoute>
+        ) : (
+          <Navigate to="/login" replace />
+        )
       } />
       
       <Route path="/subscription" element={
-        <ProtectedRoute>
+        isAuthenticated ? (
           <Layout>
             <SubscriptionPage />
           </Layout>
-        </ProtectedRoute>
+        ) : (
+          <Navigate to="/login" replace />
+        )
       } />
       
       {/* 404 Not Found */}

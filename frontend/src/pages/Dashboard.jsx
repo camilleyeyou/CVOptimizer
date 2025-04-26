@@ -4,25 +4,30 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  Grid,
   Button,
   CircularProgress,
   Paper,
+  Grid,
   Alert,
 } from '@mui/material';
+
 import { Add as AddIcon } from '@mui/icons-material';
 import CVCard from '../components/cv/CVCard';
 import { fetchCVs, clearError } from '../store/slices/cvSlice';
+import { fetchSubscription } from '../store/slices/subscriptionSlice';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  
   const { cvs, isLoading, error } = useSelector((state) => state.cv);
   const { user } = useSelector((state) => state.auth);
+  const { subscription } = useSelector((state) => state.subscription);
 
-  // Fetch CVs on component mount
+  // Fetch CVs and subscription on component mount
   useEffect(() => {
     dispatch(fetchCVs());
+    dispatch(fetchSubscription());
   }, [dispatch]);
 
   const handleCreateCV = () => {
@@ -43,6 +48,15 @@ const Dashboard = () => {
           Create New CV
         </Button>
       </Box>
+
+      {subscription === 'free' && cvs.length >= 2 && (
+        <Alert 
+          severity="info" 
+          sx={{ mb: 3 }}
+        >
+          You've reached the limit for free accounts. Upgrade to premium to create more CVs.
+        </Alert>
+      )}
 
       {error && (
         <Alert 
@@ -77,7 +91,7 @@ const Dashboard = () => {
       ) : (
         <Grid container spacing={3}>
           {cvs.map((cv) => (
-            <Grid item xs={12} sm={6} md={4} key={cv.id}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' } }} key={cv._id}>
               <CVCard cv={cv} />
             </Grid>
           ))}

@@ -545,7 +545,7 @@ const AdditionalSectionsForm = () => {
             ) : (
               <Grid container spacing={2}>
                 {certifications.map((cert, index) => (
-                  <Grid item xs={12} key={index}>
+                  <Grid sx={{ width: '100%' }} key={index}>
                     <Card variant="outlined">
                       <CardContent>
                         <Typography variant="h6" component="div">
@@ -612,7 +612,7 @@ const AdditionalSectionsForm = () => {
             ) : (
               <Grid container spacing={2}>
                 {projects.map((project, index) => (
-                  <Grid item xs={12} key={index}>
+                  <Grid sx={{ width: '100%' }} key={index}>
                     <Card variant="outlined">
                       <CardContent>
                         <Typography variant="h6" component="div">
@@ -681,7 +681,7 @@ const AdditionalSectionsForm = () => {
             ) : (
               <Grid container spacing={2}>
                 {awards.map((award, index) => (
-                  <Grid item xs={12} key={index}>
+                  <Grid sx={{ width: '100%' }} key={index}>
                     <Card variant="outlined">
                       <CardContent>
                         <Typography variant="h6" component="div">
@@ -732,7 +732,7 @@ const AdditionalSectionsForm = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Certification Name"
                 name="name"
@@ -745,7 +745,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., AWS Certified Solutions Architect"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Issuing Organization"
                 name="issuer"
@@ -758,7 +758,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., Amazon Web Services"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Date Earned"
                 name="date"
@@ -772,7 +772,7 @@ const AdditionalSectionsForm = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Certificate URL (optional)"
                 name="url"
@@ -782,7 +782,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., https://www.credential.net/..."
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ width: '100%' }}>
               <TextField
                 label="Description (optional)"
                 name="description"
@@ -814,7 +814,7 @@ const AdditionalSectionsForm = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Project Name"
                 name="name"
@@ -827,7 +827,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., E-commerce Website"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Your Role (optional)"
                 name="role"
@@ -837,7 +837,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., Lead Developer"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Start Date"
                 name="startDate"
@@ -851,7 +851,7 @@ const AdditionalSectionsForm = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -863,7 +863,7 @@ const AdditionalSectionsForm = () => {
                 label="This is an ongoing project"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="End Date"
                 name="endDate"
@@ -878,7 +878,7 @@ const AdditionalSectionsForm = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Project URL (optional)"
                 name="url"
@@ -888,7 +888,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., https://github.com/yourusername/project"
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ width: '100%' }}>
               <TextField
                 label="Description"
                 name="description"
@@ -920,7 +920,7 @@ const AdditionalSectionsForm = () => {
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Award Name"
                 name="name"
@@ -933,7 +933,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., Employee of the Year"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Issuing Organization"
                 name="issuer"
@@ -946,7 +946,7 @@ const AdditionalSectionsForm = () => {
                 placeholder="e.g., XYZ Corporation"
               />
             </Grid>
-            <Grid item xs={12} sm={6}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Date Received"
                 name="date"
@@ -960,7 +960,7 @@ const AdditionalSectionsForm = () => {
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%' } }}>
               <TextField
                 label="Description (optional)"
                 name="description"
@@ -973,39 +973,37 @@ const AdditionalSectionsForm = () => {
               />
             </Grid>
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseAwardDialog}>Cancel</Button>
-          <Button 
-            variant="contained" 
-            onClick={handleSaveAward}
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-      {/* Navigation Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Button
-          variant="outlined"
-          size="large"
-          onClick={handleBack}
-        >
-          Back
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCloseAwardDialog}>Cancel</Button>
+         <Button 
+           variant="contained" 
+           onClick={handleSaveAward}
+         >
+           Save
         </Button>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleFinalize}
-        >
-          Finalize & View CV
-        </Button>
-      </Box>
-    </Box>
-  );
+       </DialogActions>
+     </Dialog>
+     
+     {/* Navigation Buttons */}
+     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+       <Button
+         variant="outlined"
+         size="large"
+         onClick={handleBack}
+       >
+         Back
+       </Button>
+       <Button
+         variant="contained"
+         size="large"
+         onClick={handleFinalize}
+       >
+         Finalize & View CV
+       </Button>
+     </Box>
+   </Box>
+ );
 };
 
 export default AdditionalSectionsForm;
-
-        

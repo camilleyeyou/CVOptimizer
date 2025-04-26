@@ -4,7 +4,7 @@ import authService from '../../services/authService';
 const initialState = {
   user: null,
   token: localStorage.getItem('token') || null,
-  isAuthenticated: false,
+  isAuthenticated: !!localStorage.getItem('token'),
   isLoading: false,
   error: null,
 };
@@ -49,24 +49,29 @@ export default authSlice.reducer;
 
 // Thunk for checking auth status
 export const checkAuth = () => async (dispatch) => {
-  dispatch(setLoading(true));
-  try {
-    // Get auth status from the backend
-    const response = await authService.checkAuthStatus();
+    const token = localStorage.getItem('token');
+        if (!token) {
+      dispatch(clearCredentials());
+      return;
+    }
     
-    if (response.user) {
+    dispatch(setLoading(true));
+    
+    try {
+      const response = await authService.checkAuthStatus();
+      
       dispatch(setCredentials({
-        token: localStorage.getItem('token'),
+        token,
         user: response.user
       }));
+    } catch (error) {
+      if (error.response && error.response.status === 401) {
+        dispatch(clearCredentials());
+      }
+    } finally {
+      dispatch(setLoading(false));
     }
-  } catch (error) {
-    // If token is invalid, clear credentials
-    dispatch(clearCredentials());
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+  };
 
 // Thunk for login
 export const loginUser = (email, password) => async (dispatch) => {
@@ -76,7 +81,7 @@ export const loginUser = (email, password) => async (dispatch) => {
     dispatch(setCredentials(response));
     return response;
   } catch (error) {
-    dispatch(setError(error.message || 'Login failed'));
+    dispatch(setError(error.message));
     throw error;
   } finally {
     dispatch(setLoading(false));
@@ -91,7 +96,7 @@ export const registerUser = (name, email, password) => async (dispatch) => {
     dispatch(setCredentials(response));
     return response;
   } catch (error) {
-    dispatch(setError(error.message || 'Registration failed'));
+    dispatch(setError(error.message));
     throw error;
   } finally {
     dispatch(setLoading(false));
@@ -99,14 +104,20 @@ export const registerUser = (name, email, password) => async (dispatch) => {
 };
 
 // Thunk for logout
-export const logoutUser = () => async (dispatch) => {
+export const logoutUser = () => (dispatch) => {
+  authService.logout();
+  dispatch(clearCredentials());
+};
+
+// Thunk for password reset request
+export const forgotPassword = (email) => async (dispatch) => {
   dispatch(setLoading(true));
   try {
-    await authService.logout();
-    dispatch(clearCredentials());
+    const response = await authService.forgotPassword(email);
+    return response;
   } catch (error) {
-    // Even if the logout request fails, clear the credentials locally
-    dispatch(clearCredentials());
+    dispatch(setError(error.message));
+    throw error;
   } finally {
     dispatch(setLoading(false));
   }

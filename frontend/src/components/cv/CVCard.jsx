@@ -18,10 +18,9 @@ import {
   Visibility as VisibilityIcon,
   MoreVert as MoreVertIcon,
   Delete as DeleteIcon,
-  FileCopy as FileCopyIcon,
   Download as DownloadIcon,
 } from '@mui/icons-material';
-import { setCurrentCV, deleteCV, duplicateCV, generatePDF } from '../../store/slices/cvSlice';
+import { setCurrentCV, deleteCV, generatePDF } from '../../store/slices/cvSlice';
 import { showConfirmDialog, showNotification } from '../../store/slices/uiSlice';
 import { formatMonthYear } from '../../utils/dateFormatter';
 
@@ -41,13 +40,13 @@ const CVCard = ({ cv }) => {
 
   const handleEdit = () => {
     dispatch(setCurrentCV(cv));
-    navigate(`/cv/edit/${cv.id}`);
+    navigate(`/cv/edit/${cv._id}`);
     handleMenuClose();
   };
 
   const handleView = () => {
     dispatch(setCurrentCV(cv));
-    navigate(`/cv/preview/${cv.id}`);
+    navigate(`/cv/preview/${cv._id}`);
     handleMenuClose();
   };
 
@@ -61,7 +60,7 @@ const CVCard = ({ cv }) => {
         cancelText: 'Cancel',
         onConfirm: async () => {
           try {
-            await dispatch(deleteCV(cv.id)).unwrap();
+            await dispatch(deleteCV(cv._id)).unwrap();
             dispatch(showNotification({
               message: 'CV deleted successfully',
               type: 'success',
@@ -77,25 +76,9 @@ const CVCard = ({ cv }) => {
     );
   };
 
-  const handleDuplicate = async () => {
-    try {
-      await dispatch(duplicateCV(cv.id)).unwrap();
-      dispatch(showNotification({
-        message: 'CV duplicated successfully',
-        type: 'success',
-      }));
-    } catch (error) {
-      dispatch(showNotification({
-        message: `Error duplicating CV: ${error.message}`,
-        type: 'error',
-      }));
-    }
-    handleMenuClose();
-  };
-
   const handleDownload = async () => {
     try {
-      await dispatch(generatePDF(cv.id)).unwrap();
+      await dispatch(generatePDF(cv._id)).unwrap();
       dispatch(showNotification({
         message: 'CV downloaded successfully',
         type: 'success',
@@ -109,10 +92,10 @@ const CVCard = ({ cv }) => {
     handleMenuClose();
   };
 
-  // Format date
+  // Format date - using the imported formatMonthYear for consistency
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    return formatMonthYear(dateString);
+    return new Date(dateString).toLocaleDateString();
   };
 
   return (
@@ -147,10 +130,6 @@ const CVCard = ({ cv }) => {
               <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
               Preview
             </MenuItem>
-            <MenuItem onClick={handleDuplicate}>
-              <FileCopyIcon fontSize="small" sx={{ mr: 1 }} />
-              Duplicate
-            </MenuItem>
             <MenuItem onClick={handleDownload}>
               <DownloadIcon fontSize="small" sx={{ mr: 1 }} />
               Download PDF
@@ -163,7 +142,7 @@ const CVCard = ({ cv }) => {
           </Menu>
         </Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {cv.personalInfo?.name || 'Unnamed'} • {cv.personalInfo?.title || 'No title'}
+          {cv.personalInfo?.fullName || 'Unnamed'} • {cv.personalInfo?.jobTitle || 'No title'}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
           Template: {cv.template.charAt(0).toUpperCase() + cv.template.slice(1)}

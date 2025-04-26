@@ -15,6 +15,7 @@ import {
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
+  Description as DescriptionIcon,
   Settings as SettingsIcon,
   Subscriptions as SubscriptionsIcon,
   Add as AddIcon,
@@ -27,6 +28,7 @@ import Notification from './Notification';
 import ConfirmDialog from './ConfirmDialog';
 
 import { logoutUser } from '../../store/slices/authSlice';
+import { toggleSidebar } from '../../store/slices/uiSlice';
 
 // Drawer width
 const drawerWidth = 240;

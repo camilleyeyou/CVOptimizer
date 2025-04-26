@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -9,14 +9,17 @@ import {
   StepLabel,
   Typography,
   Button,
-  Divider,
   Grid,
+  Divider,
   CircularProgress,
   Alert,
 } from '@mui/material';
+
 import {
   Save as SaveIcon,
   Visibility as VisibilityIcon,
+  KeyboardArrowLeft as KeyboardArrowLeftIcon,
+  KeyboardArrowRight as KeyboardArrowRightIcon,
 } from '@mui/icons-material';
 
 // Import CV Form Components
@@ -33,7 +36,7 @@ import { ModernTemplate, ClassicTemplate } from '../components/cv/templates';
 
 // Import Store Actions
 import { fetchCV, createCV, updateCV, clearError, setCurrentCV } from '../store/slices/cvSlice';
-import { setCurrentStep, showNotification } from '../store/slices/uiSlice';
+import { showNotification } from '../store/slices/uiSlice';
 
 const steps = [
   'Choose Template',
@@ -53,20 +56,34 @@ const CVEditor = () => {
   const { currentCV, isLoading, error } = useSelector((state) => state.cv);
   const { currentStep, selectedTemplate } = useSelector((state) => state.ui);
   
-  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const isNewCV = id === 'create';
+
+  // Added handleStepChange function to fix the undefined errors
+  const handleStepChange = (step) => {
+    dispatch({ type: 'ui/setCurrentStep', payload: step });
+  };
   
   // Fetch CV data if editing an existing CV
   useEffect(() => {
-    if (!isNewCV) {
+    if (!isNewCV && id) {
       dispatch(fetchCV(id));
     } else {
       // Initialize a new CV
       dispatch(setCurrentCV({
         title: 'Untitled CV',
-        template: selectedTemplate,
-        personalInfo: {},
+        template: selectedTemplate || 'modern',
+        personalInfo: {
+          fullName: '',
+          jobTitle: '',
+          email: '',
+          phone: '',
+          location: '',
+          website: '',
+          linkedin: '',
+          github: ''
+        },
         summary: '',
         workExperience: [],
         education: [],
@@ -74,15 +91,13 @@ const CVEditor = () => {
         languages: [],
         certifications: [],
         projects: [],
-        awards: [],
+        customSections: [],
+        references: [],
+        metadata: {},
+        privacy: { isPublic: false }
       }));
     }
   }, [dispatch, id, isNewCV, selectedTemplate]);
-  
-  // Handle step change
-  const handleStepChange = (newStep) => {
-    dispatch(setCurrentStep(newStep));
-  };
 
   // Get current step content
   const getStepContent = (step) => {
@@ -115,7 +130,7 @@ const CVEditor = () => {
           message: 'CV created successfully',
           type: 'success',
         }));
-        navigate(`/cv/edit/${result.id}`);
+        navigate(`/cv/edit/${result._id}`);
       } else {
         await dispatch(updateCV(id, currentCV)).unwrap();
         dispatch(showNotification({
@@ -209,6 +224,28 @@ const CVEditor = () => {
             <Box sx={{ p: 3 }}>
               {currentCV && getStepContent(currentStep)}
             </Box>
+            
+            {/* Navigation Buttons */}
+            {currentStep !== 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 3, bgcolor: 'grey.50' }}>
+                <Button
+                  variant="outlined"
+                  startIcon={<KeyboardArrowLeftIcon />}
+                  onClick={() => handleStepChange(currentStep - 1)}
+                  disabled={currentStep === 0}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="contained"
+                  endIcon={<KeyboardArrowRightIcon />}
+                  onClick={() => handleStepChange(currentStep + 1)}
+                  disabled={currentStep === steps.length - 1}
+                >
+                  Next
+                </Button>
+              </Box>
+            )}
           </Paper>
         </Grid>
 

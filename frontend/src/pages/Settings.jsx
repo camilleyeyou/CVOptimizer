@@ -3,7 +3,13 @@ import { Box, Typography, Paper } from '@mui/material';
 
 const Settings = () => {
   return (
-    <Box>
+    <Box sx={{ 
+        width: '100%', 
+        p: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2
+      }}>
       <Typography variant="h4" component="h1" gutterBottom>
         Settings
       </Typography>

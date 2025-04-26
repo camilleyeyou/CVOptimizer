@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -8,7 +8,6 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Divider,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -29,7 +28,7 @@ const CVPreview = () => {
   const dispatch = useDispatch();
   
   const { currentCV, isLoading, error } = useSelector((state) => state.cv);
-  const [isDownloading, setIsDownloading] = React.useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // Fetch CV data on mount
   useEffect(() => {

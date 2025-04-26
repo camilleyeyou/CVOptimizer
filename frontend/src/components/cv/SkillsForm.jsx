@@ -7,7 +7,6 @@ import {
   Button,
   Paper,
   Divider,
-  Grid,
   IconButton,
   Chip,
   MenuItem,
@@ -19,6 +18,7 @@ import {
   FormControl,
   InputLabel,
   Select,
+  Grid,
   FormHelperText,
   Tooltip,
   Card,
@@ -414,7 +414,7 @@ const SkillsForm = () => {
         
         <Grid container spacing={3}>
           {/* Skills Section */}
-          <Grid item xs={12} md={6}>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
             <Card variant="outlined" sx={{ height: '100%' }}>
               <CardHeader
                 title="Skills"
@@ -457,7 +457,7 @@ const SkillsForm = () => {
           </Grid>
           
           {/* Languages Section */}
-          <Grid item xs={12} md={6}>
+          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
             <Card variant="outlined" sx={{ height: '100%' }}>
               <CardHeader
                 title="Languages"

@@ -113,7 +113,7 @@ const Landing = () => {
         </Typography>
         <Grid container spacing={4}>
           {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+            <Grid sx={{ width: { xs: '100%', sm: '50%', md: '25%' } }} key={index}>
               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3 }}>
                 <Box sx={{ mb: 2 }}>
                   {feature.icon}
