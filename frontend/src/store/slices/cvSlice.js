@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import cvService from '../../services/cvService';
 
 const initialState = {
@@ -61,11 +61,10 @@ export const fetchCVs = () => async (dispatch) => {
 
 // Thunk for fetching a specific CV
 export const fetchCV = (id) => async (dispatch) => {
-  // Add validation to prevent API calls with undefined ID
-  if (!id) {
-    const errorMsg = "CV ID is undefined or missing";
-    dispatch(setError(errorMsg));
-    return Promise.reject(new Error(errorMsg));
+  // Make sure we don't try to fetch a CV with ID 'create'
+  if (!id || id === 'create') {
+    dispatch(setError("CV ID is undefined or missing"));
+    return Promise.reject(new Error("CV ID is undefined or missing"));
   }
   
   dispatch(setLoading(true));
@@ -82,41 +81,56 @@ export const fetchCV = (id) => async (dispatch) => {
 };
 
 // Thunk for creating a CV
-export const createCV = (cvData) => async (dispatch) => {
-  dispatch(setLoading(true));
-  try {
-    const newCV = await cvService.createCV(cvData);
-    dispatch(setCurrentCV(newCV));
-    return newCV;
-  } catch (error) {
-    dispatch(setError(error.message));
-    throw error;
-  } finally {
-    dispatch(setLoading(false));
+export const createCV = createAsyncThunk(
+  'cv/createCV',
+  async (cvData, { rejectWithValue }) => {
+    try {
+      // Make sure the field names are correct for the API
+      const formattedData = {
+        ...cvData,
+        personalInfo: {
+          ...cvData.personalInfo,
+          fullName: cvData.personalInfo.fullName || cvData.personalInfo.name || '',
+          jobTitle: cvData.personalInfo.jobTitle || cvData.personalInfo.title || '',
+          location: cvData.personalInfo.location || cvData.personalInfo.address || '',
+        }
+      };
+      
+      const response = await cvService.createCV(formattedData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to create CV');
+    }
   }
-};
+);
 
 // Thunk for updating a CV
-export const updateCV = (id, cvData) => async (dispatch) => {
-  // Add validation to prevent API calls with undefined ID
-  if (!id) {
-    const errorMsg = "CV ID is undefined or missing";
-    dispatch(setError(errorMsg));
-    return Promise.reject(new Error(errorMsg));
+export const updateCV = createAsyncThunk(
+  'cv/updateCV',
+  async ({ id, cvData }, { rejectWithValue }) => {
+    try {
+      if (!id) {
+        throw new Error('CV ID is undefined or missing');
+      }
+      
+      // Make sure the field names are correct for the API
+      const formattedData = {
+        ...cvData,
+        personalInfo: {
+          ...cvData.personalInfo,
+          fullName: cvData.personalInfo.fullName || cvData.personalInfo.name || '',
+          jobTitle: cvData.personalInfo.jobTitle || cvData.personalInfo.title || '',
+          location: cvData.personalInfo.location || cvData.personalInfo.address || '',
+        }
+      };
+      
+      const response = await cvService.updateCV(id, formattedData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to update CV');
+    }
   }
-  
-  dispatch(setLoading(true));
-  try {
-    const updatedCV = await cvService.updateCV(id, cvData);
-    dispatch(setCurrentCV(updatedCV));
-    return updatedCV;
-  } catch (error) {
-    dispatch(setError(error.message));
-    throw error;
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+);
 
 // Thunk for deleting a CV
 export const deleteCV = (id) => async (dispatch) => {
@@ -143,25 +157,21 @@ export const deleteCV = (id) => async (dispatch) => {
 };
 
 // Thunk for generating a PDF
-export const generatePDF = (id) => async (dispatch) => {
-  // Add validation to prevent API calls with undefined ID
-  if (!id) {
-    const errorMsg = "CV ID is undefined or missing";
-    dispatch(setError(errorMsg));
-    return Promise.reject(new Error(errorMsg));
+export const generatePDF = createAsyncThunk(
+  'cv/generatePDF',
+  async (id, { rejectWithValue }) => {
+    try {
+      if (!id) {
+        throw new Error("CV ID is undefined or missing");
+      }
+      
+      await cvService.generatePDF(id);
+      return true;
+    } catch (error) {
+      return rejectWithValue(error.message || 'Failed to generate PDF');
+    }
   }
-  
-  dispatch(setLoading(true));
-  try {
-    await cvService.generatePDF(id);
-    return true;
-  } catch (error) {
-    dispatch(setError(error.message));
-    throw error;
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
+);
 
 // Thunk for analyzing a CV
 export const analyzeCV = (id, jobDescription) => async (dispatch) => {
