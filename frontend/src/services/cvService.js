@@ -1,98 +1,139 @@
+// services/cvService.js
 import api from './api';
 
 const cvService = {
-  // Get all CVs for the current user
-  getUserCVs: async () => {
+  /**
+   * Get all CVs for the current user
+   */
+  async getUserCVs() {
     try {
       const response = await api.get('/cv');
-      return response.data.data;
+      return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch CVs' };
+      throw this.handleError(error);
     }
   },
 
-  // Get a specific CV by ID
-  getCV: async (id) => {
+  /**
+   * Get a single CV by ID
+   */
+  async getCV(id) {
     try {
       const response = await api.get(`/cv/${id}`);
-      return response.data.data;
+      return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to fetch CV' };
+      throw this.handleError(error);
     }
   },
 
-  // Create a new CV
-  createCV: async (cvData) => {
+  /**
+   * Create a new CV
+   */
+  async createCV(cvData) {
     try {
       const response = await api.post('/cv', cvData);
-      return response.data.data;
+      return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to create CV' };
+      throw this.handleError(error);
     }
   },
 
-  // Update a CV
-  updateCV: async (id, cvData) => {
+  /**
+   * Update an existing CV
+   */
+  async updateCV(id, cvData) {
     try {
       const response = await api.put(`/cv/${id}`, cvData);
-      return response.data.data;
+      return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to update CV' };
+      throw this.handleError(error);
     }
   },
 
-  // Delete a CV
-  deleteCV: async (id) => {
+  /**
+   * Delete a CV
+   */
+  async deleteCV(id) {
     try {
       const response = await api.delete(`/cv/${id}`);
       return response.data;
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to delete CV' };
+      throw this.handleError(error);
     }
   },
 
-  // Analyze a CV with a job description
-  analyzeCV: async (id, jobDescription) => {
+  /**
+   * Generate and download a PDF of a CV
+   * This method now returns a blob that can be downloaded
+   */
+  async generatePDF(id) {
     try {
-      const response = await api.post(`/cv/${id}/analyze`, { jobDescription });
-      return response.data.data;
-    } catch (error) {
-      throw error.response?.data || { message: 'Failed to analyze CV' };
-    }
-  },
-
-  // Generate PDF for a CV
-  generatePDF: async (id) => {
-    try {
-      const response = await api.get(`/cv/${id}/pdf`, {
-        responseType: 'blob',
+      const response = await api.get(`/cv/${id}/download`, {
+        responseType: 'blob', // Critical for binary data
+        headers: {
+          Accept: 'application/pdf',
+        },
       });
       
-      // Create a blob URL for the PDF
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      
-      // Get filename from headers if available
-      const contentDisposition = response.headers['content-disposition'];
-      let filename = 'cv.pdf';
-      
-      if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch && filenameMatch.length === 2) {
-          filename = filenameMatch[1];
-        }
-      }
-      
-      // Create a download link and trigger the download
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      return true;
+      return response.data; // Return the blob directly
     } catch (error) {
-      throw error.response?.data || { message: 'Failed to generate PDF' };
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Download the generated PDF
+   * New helper method to handle the actual download process
+   */
+  downloadPDF(blob, filename = 'resume.pdf') {
+    // Create a URL for the blob
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    
+    // Append to the document, click, and clean up
+    document.body.appendChild(link);
+    link.click();
+    
+    // Clean up
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    }, 100);
+  },
+
+  /**
+   * Analyze a CV against a job description
+   */
+  async analyzeCV(id, jobDescription) {
+    try {
+      const response = await api.post(`/cv/${id}/analyze`, { jobDescription });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  },
+
+  /**
+   * Handle API errors consistently
+   */
+  handleError(error) {
+    console.error('API Error:', error);
+    
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      const message = error.response.data?.message || error.response.statusText || 'Server error';
+      return new Error(message);
+    } else if (error.request) {
+      // The request was made but no response was received
+      return new Error('No response from server. Please check your internet connection.');
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      return error;
     }
   },
 };

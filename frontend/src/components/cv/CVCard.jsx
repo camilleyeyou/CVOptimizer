@@ -92,12 +92,6 @@ const CVCard = ({ cv }) => {
     handleMenuClose();
   };
 
-  // Format date - using the imported formatMonthYear for consistency
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString();
-  };
-
   return (
     <Card sx={{ 
       height: '100%', 
@@ -148,7 +142,7 @@ const CVCard = ({ cv }) => {
           Template: {cv.template.charAt(0).toUpperCase() + cv.template.slice(1)}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
-          Last updated: {formatDate(cv.updatedAt)}
+          Last updated: {cv.updatedAt ? formatMonthYear(cv.updatedAt) : 'Not available'}
         </Typography>
       </CardContent>
       <CardActions>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -21,18 +21,51 @@ const Dashboard = () => {
   const navigate = useNavigate();
   
   const { cvs, isLoading, error } = useSelector((state) => state.cv);
-  const { user } = useSelector((state) => state.auth);
   const { subscription } = useSelector((state) => state.subscription);
-
+  const [dataLoaded, setDataLoaded] = useState(false);
+  
+  // Debug the CVs structure
+  useEffect(() => {
+    if (Array.isArray(cvs)) {
+      console.log(`Dashboard has ${cvs.length} CVs:`, cvs);
+      // Check if all CVs have _id property
+      const missingIds = cvs.filter(cv => !cv._id);
+      if (missingIds.length > 0) {
+        console.error(`Found ${missingIds.length} CVs without _id property:`, missingIds);
+      }
+    } else {
+      console.error("CVs is not an array:", cvs);
+    }
+  }, [cvs]);
+  
   // Fetch CVs and subscription on component mount
   useEffect(() => {
-    dispatch(fetchCVs());
-    dispatch(fetchSubscription());
+    const loadData = async () => {
+      try {
+        await dispatch(fetchCVs());
+        await dispatch(fetchSubscription());
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setDataLoaded(true);
+      }
+    };
+    
+    loadData();
   }, [dispatch]);
 
   const handleCreateCV = () => {
     navigate('/cv/create');
   };
+
+  // Show loading indicator while data is being fetched
+  if (isLoading && !dataLoaded) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -49,7 +82,7 @@ const Dashboard = () => {
         </Button>
       </Box>
 
-      {subscription === 'free' && cvs.length >= 2 && (
+      {subscription === 'free' && Array.isArray(cvs) && cvs.length >= 2 && (
         <Alert 
           severity="info" 
           sx={{ mb: 3 }}
@@ -68,10 +101,31 @@ const Dashboard = () => {
         </Alert>
       )}
 
+      {/* Debug information */}
+      <Box mb={2} py={1} px={2} bgcolor="rgba(0, 0, 0, 0.05)" borderRadius={1}>
+        <Typography variant="subtitle2">Debug Info:</Typography>
+        <Typography variant="body2">CVs count: {Array.isArray(cvs) ? cvs.length : 'Not an array'}</Typography>
+        <Typography variant="body2">Loading: {isLoading ? 'Yes' : 'No'}</Typography>
+        <Typography variant="body2">Data loaded: {dataLoaded ? 'Yes' : 'No'}</Typography>
+      </Box>
+
       {isLoading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
           <CircularProgress />
         </Box>
+      ) : !Array.isArray(cvs) ? (
+        <Paper elevation={2} sx={{ p: 4, textAlign: 'center', mt: 4 }}>
+          <Typography variant="h6" color="error">
+            Error loading CVs
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => dispatch(fetchCVs())}
+            sx={{ mt: 2 }}
+          >
+            Retry
+          </Button>
+        </Paper>
       ) : cvs.length === 0 ? (
         <Paper elevation={2} sx={{ p: 4, textAlign: 'center', mt: 4 }}>
           <Typography variant="h6" gutterBottom>
@@ -90,11 +144,19 @@ const Dashboard = () => {
         </Paper>
       ) : (
         <Grid container spacing={3}>
-          {cvs.map((cv) => (
-            <Grid sx={{ width: { xs: '100%', sm: '50%', md: '33.33%' } }} key={cv._id}>
-              <CVCard cv={cv} />
-            </Grid>
-          ))}
+          {cvs.map((cv, index) => {
+            // Check for missing _id property
+            if (!cv._id) {
+              console.error(`CV at index ${index} is missing _id property:`, cv);
+              return null; // Skip rendering this CV
+            }
+            
+            return (
+              <Grid item xs={12} sm={6} md={4} key={cv._id}>
+                <CVCard cv={cv} />
+              </Grid>
+            );
+          })}
         </Grid>
       )}
     </Box>

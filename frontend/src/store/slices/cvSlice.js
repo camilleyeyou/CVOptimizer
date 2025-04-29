@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import cvService from '../../services/cvService';
 
 const initialState = {
-  cvs: [],
+  cvs: [], // This is already correctly initialized as an array
   currentCV: null,
   isLoading: false,
   error: null,
@@ -13,7 +13,8 @@ const cvSlice = createSlice({
   initialState,
   reducers: {
     setCVs: (state, action) => {
-      state.cvs = action.payload;
+      // Ensure cvs is always an array even if the payload is invalid
+      state.cvs = Array.isArray(action.payload) ? action.payload : [];
     },
     setCurrentCV: (state, action) => {
       state.currentCV = action.payload;
@@ -49,10 +50,13 @@ export const fetchCVs = () => async (dispatch) => {
   dispatch(setLoading(true));
   try {
     const cvs = await cvService.getUserCVs();
-    dispatch(setCVs(cvs));
+    // Ensure cvs is always an array even if the API returns something else
+    dispatch(setCVs(Array.isArray(cvs) ? cvs : []));
     return cvs;
   } catch (error) {
     dispatch(setError(error.message));
+    // Make sure to set an empty array on error
+    dispatch(setCVs([]));
     throw error;
   } finally {
     dispatch(setLoading(false));
@@ -146,7 +150,8 @@ export const deleteCV = (id) => async (dispatch) => {
     await cvService.deleteCV(id);
     // After deletion, fetch the updated list of CVs
     const cvs = await cvService.getUserCVs();
-    dispatch(setCVs(cvs));
+    // Ensure cvs is always an array
+    dispatch(setCVs(Array.isArray(cvs) ? cvs : []));
     return true;
   } catch (error) {
     dispatch(setError(error.message));

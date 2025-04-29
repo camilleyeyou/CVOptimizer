@@ -57,7 +57,7 @@ const CVEditor = () => {
   const { currentStep, selectedTemplate } = useSelector((state) => state.ui);
   const { user } = useSelector((state) => state.auth);
   
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isPreviewOpen ] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   
@@ -104,19 +104,26 @@ const CVEditor = () => {
           metadata: {},
           privacy: { isPublic: false }
         }));
+        setInitialLoad(false);
       } else if (id) {
         console.log("Fetching existing CV:", id);
         // Fetch existing CV
-        dispatch(fetchCV(id))
-          .unwrap()
-          .catch((err) => {
+        const fetchCVData = async () => {
+          try {
+            await dispatch(fetchCV(id));
+            setInitialLoad(false);
+          } catch (err) {
             console.error("Error fetching CV:", err);
             dispatch(showNotification({
               message: `Failed to load CV: ${err.message || 'Unknown error'}`,
               type: 'error',
             }));
             navigate('/dashboard');
-          });
+            setInitialLoad(false);
+          }
+        };
+        
+        fetchCVData();
       } else {
         console.error("No ID provided");
         dispatch(showNotification({
@@ -124,8 +131,8 @@ const CVEditor = () => {
           type: 'error',
         }));
         navigate('/dashboard');
+        setInitialLoad(false);
       }
-      setInitialLoad(false);
     }
   }, [dispatch, id, isNewCV, selectedTemplate, navigate, initialLoad, location.pathname, user]);
 
@@ -174,17 +181,22 @@ const CVEditor = () => {
       };
       
       if (isNewCV) {
-        const result = await dispatch(createCV(cvToSave)).unwrap();
-        console.log("CV created successfully:", result);
-        dispatch(showNotification({
-          message: 'CV created successfully',
-          type: 'success',
-        }));
-        
-        if (result._id) {
-          navigate(`/cv/edit/${result._id}`);
-        } else {
-          navigate('/dashboard');
+        try {
+          const result = await dispatch(createCV(cvToSave)).unwrap();
+          console.log("CV created successfully:", result);
+          
+          dispatch(showNotification({
+            message: 'CV created successfully',
+            type: 'success',
+          }));
+          
+          if (result && result._id) {
+            navigate(`/cv/edit/${result._id}`);
+          } else {
+            navigate('/dashboard');
+          }
+        } catch (err) {
+          throw err; // Pass to outer catch block
         }
       } else {
         if (!id) {
@@ -196,12 +208,17 @@ const CVEditor = () => {
           return;
         }
         
-        await dispatch(updateCV({id, cvData: cvToSave})).unwrap();
-        console.log("CV updated successfully");
-        dispatch(showNotification({
-          message: 'CV updated successfully',
-          type: 'success',
-        }));
+        try {
+          await dispatch(updateCV({id, cvData: cvToSave})).unwrap();
+          console.log("CV updated successfully");
+          
+          dispatch(showNotification({
+            message: 'CV updated successfully',
+            type: 'success',
+          }));
+        } catch (err) {
+          throw err; // Pass to outer catch block
+        }
       }
     } catch (error) {
       console.error("Error saving CV:", error);
@@ -225,14 +242,43 @@ const CVEditor = () => {
   };
 
   // Handle preview toggle
-  const togglePreview = () => {
-    setIsPreviewOpen(!isPreviewOpen);
+  // const togglePreview = () => {
+    // setIsPreviewOpen(!isPreviewOpen);
+ // };
+
+  // Handle preview click
+  const handlePreview = () => {
+    if (currentCV && currentCV._id) {
+      navigate(`/cv/preview/${currentCV._id}`);
+    } else {
+      dispatch(showNotification({
+        message: 'Please save the CV first before previewing it',
+        type: 'warning',
+      }));
+    }
   };
 
   if (isLoading || initialLoad) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Check if currentCV is valid
+  if (!currentCV) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column' }}>
+        <Alert severity="error" sx={{ mb: 3 }}>
+          Failed to load CV data. Please try again.
+        </Alert>
+        <Button 
+          variant="contained" 
+          onClick={() => navigate('/dashboard')}
+        >
+          Back to Dashboard
+        </Button>
       </Box>
     );
   }
@@ -250,7 +296,7 @@ const CVEditor = () => {
       website: currentCV?.personalInfo?.website || 'yourwebsite.com',
     },
     summary: currentCV?.summary || 'Your professional summary will appear here.',
-    workExperience: currentCV?.workExperience?.length ? currentCV.workExperience : [
+    workExperience: Array.isArray(currentCV?.workExperience) && currentCV.workExperience.length ? currentCV.workExperience : [
       {
         company: 'Example Company',
         position: 'Your Position',
@@ -260,7 +306,7 @@ const CVEditor = () => {
         description: 'Description of your responsibilities and achievements.',
       }
     ],
-    education: currentCV?.education?.length ? currentCV.education : [
+    education: Array.isArray(currentCV?.education) && currentCV.education.length ? currentCV.education : [
       {
         institution: 'University Name',
         degree: 'Your Degree',
@@ -270,19 +316,19 @@ const CVEditor = () => {
         description: 'Additional details about your education.',
       }
     ],
-    skills: currentCV?.skills?.length ? currentCV.skills : [
+    skills: Array.isArray(currentCV?.skills) && currentCV.skills.length ? currentCV.skills : [
       { name: 'Skill 1', level: 'Expert' },
       { name: 'Skill 2', level: 'Advanced' },
       { name: 'Skill 3', level: 'Intermediate' },
     ],
-    languages: currentCV?.languages?.length ? currentCV.languages : [
+    languages: Array.isArray(currentCV?.languages) && currentCV.languages.length ? currentCV.languages : [
       { name: 'English', level: 'Native' },
       { name: 'Spanish', level: 'Intermediate' },
     ],
-    certifications: currentCV?.certifications?.length ? currentCV.certifications : [
+    certifications: Array.isArray(currentCV?.certifications) && currentCV.certifications.length ? currentCV.certifications : [
       { name: 'Certification Name', issuer: 'Issuing Organization', date: '2022-01' },
     ],
-    projects: currentCV?.projects?.length ? currentCV.projects : [],
+    projects: Array.isArray(currentCV?.projects) && currentCV.projects.length ? currentCV.projects : [],
   };
 
   return (
@@ -296,7 +342,7 @@ const CVEditor = () => {
           <Button
             variant="outlined"
             startIcon={<VisibilityIcon />}
-            onClick={togglePreview}
+            onClick={handlePreview}
             sx={{ mr: 2 }}
           >
             Preview

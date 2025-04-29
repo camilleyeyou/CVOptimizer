@@ -2,8 +2,8 @@ import React from 'react';
 import { Box, Typography, Divider, List, ListItem, ListItemText } from '@mui/material';
 
 const ClassicTemplate = ({ cv }) => {
-  // Use dummy data if no CV is provided (for preview)
-  const data = cv || {
+  // Define fallback data for preview or empty CV
+  const defaultData = {
     personalInfo: {
       name: 'John Doe',
       title: 'Senior Software Developer',
@@ -60,6 +60,30 @@ const ClassicTemplate = ({ cv }) => {
       { name: 'AWS Certified Solutions Architect', issuer: 'Amazon Web Services', date: '2022-05' },
       { name: 'Professional Scrum Master I', issuer: 'Scrum.org', date: '2021-03' },
     ],
+  };
+
+  // Create a merged data object, using cv values if available, falling back to defaults
+  const data = {
+    personalInfo: {
+      name: cv?.personalInfo?.name || defaultData.personalInfo.name,
+      title: cv?.personalInfo?.title || defaultData.personalInfo.title,
+      email: cv?.personalInfo?.email || defaultData.personalInfo.email,
+      phone: cv?.personalInfo?.phone || defaultData.personalInfo.phone,
+      address: cv?.personalInfo?.address || defaultData.personalInfo.address,
+      linkedin: cv?.personalInfo?.linkedin || defaultData.personalInfo.linkedin,
+      website: cv?.personalInfo?.website || defaultData.personalInfo.website,
+    },
+    summary: cv?.summary || defaultData.summary,
+    workExperience: Array.isArray(cv?.workExperience) && cv.workExperience.length > 0 ? 
+      cv.workExperience : defaultData.workExperience,
+    education: Array.isArray(cv?.education) && cv.education.length > 0 ? 
+      cv.education : defaultData.education,
+    skills: Array.isArray(cv?.skills) && cv.skills.length > 0 ? 
+      cv.skills : defaultData.skills,
+    languages: Array.isArray(cv?.languages) && cv.languages.length > 0 ? 
+      cv.languages : defaultData.languages,
+    certifications: Array.isArray(cv?.certifications) && cv.certifications.length > 0 ? 
+      cv.certifications : defaultData.certifications,
   };
 
   const formatDate = (dateString) => {
