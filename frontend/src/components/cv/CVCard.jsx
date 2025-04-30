@@ -30,6 +30,26 @@ const CVCard = ({ cv }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
 
+  // Initial check for valid CV object
+  if (!cv) {
+    console.error("Received invalid CV object:", cv);
+    return (
+      <Card sx={{ height: '100%', p: 2 }}>
+        <Typography color="error">
+          Invalid CV data
+        </Typography>
+      </Card>
+    );
+  }
+
+  // Check if CV has required properties
+  const cvId = cv._id || cv.id;
+  const hasRequiredProps = cvId && cv.title && cv.template;
+  
+  if (!hasRequiredProps) {
+    console.error("CV is missing required properties:", cv);
+  }
+
   const handleMenuClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -39,18 +59,52 @@ const CVCard = ({ cv }) => {
   };
 
   const handleEdit = () => {
+    // Safety check for cv._id
+    if (!cvId) {
+      dispatch(showNotification({
+        message: 'Cannot edit this CV: ID is missing',
+        type: 'error',
+      }));
+      return;
+    }
+    
     dispatch(setCurrentCV(cv));
-    navigate(`/cv/edit/${cv._id}`);
+    console.log("Navigating to edit CV with ID:", cvId);
+    navigate(`/cv/edit/${cvId}`);
     handleMenuClose();
   };
 
   const handleView = () => {
+    // Safety check for cv._id
+    if (!cvId) {
+      console.error("Cannot view CV - missing ID:", cv);
+      dispatch(showNotification({
+        message: 'Cannot preview this CV: ID is missing',
+        type: 'error',
+      }));
+      return;
+    }
+    
     dispatch(setCurrentCV(cv));
-    navigate(`/cv/preview/${cv._id}`);
+    
+    // Log the navigation for debugging
+    console.log("Navigating to CV preview with ID:", cvId);
+    
+    // Navigate to the preview page
+    navigate(`/cv/preview/${cvId}`);
     handleMenuClose();
   };
 
   const handleDelete = () => {
+    // Safety check for cv._id
+    if (!cvId) {
+      dispatch(showNotification({
+        message: 'Cannot delete this CV: ID is missing',
+        type: 'error',
+      }));
+      return;
+    }
+    
     handleMenuClose();
     dispatch(
       showConfirmDialog({
@@ -60,7 +114,7 @@ const CVCard = ({ cv }) => {
         cancelText: 'Cancel',
         onConfirm: async () => {
           try {
-            await dispatch(deleteCV(cv._id)).unwrap();
+            await dispatch(deleteCV(cvId)).unwrap();
             dispatch(showNotification({
               message: 'CV deleted successfully',
               type: 'success',
@@ -77,8 +131,17 @@ const CVCard = ({ cv }) => {
   };
 
   const handleDownload = async () => {
+    // Safety check for cv._id
+    if (!cvId) {
+      dispatch(showNotification({
+        message: 'Cannot download this CV: ID is missing',
+        type: 'error',
+      }));
+      return;
+    }
+    
     try {
-      await dispatch(generatePDF(cv._id)).unwrap();
+      await dispatch(generatePDF(cvId)).unwrap();
       dispatch(showNotification({
         message: 'CV downloaded successfully',
         type: 'success',
@@ -91,6 +154,12 @@ const CVCard = ({ cv }) => {
     }
     handleMenuClose();
   };
+
+  // Safely access nested properties
+  const fullName = cv.personalInfo?.fullName || 'Unnamed';
+  const jobTitle = cv.personalInfo?.jobTitle || 'No title';
+  const templateName = cv.template ? cv.template.charAt(0).toUpperCase() + cv.template.slice(1) : 'Default';
+  const lastUpdated = cv.updatedAt ? formatMonthYear(cv.updatedAt) : 'Not available';
 
   return (
     <Card sx={{ 
@@ -106,7 +175,7 @@ const CVCard = ({ cv }) => {
       <CardContent sx={{ flexGrow: 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6" component="div" noWrap>
-            {cv.title}
+            {cv.title || 'Untitled CV'}
           </Typography>
           <IconButton onClick={handleMenuClick} size="small">
             <MoreVertIcon />
@@ -116,40 +185,47 @@ const CVCard = ({ cv }) => {
             open={open}
             onClose={handleMenuClose}
           >
-            <MenuItem onClick={handleEdit}>
+            <MenuItem onClick={handleEdit} disabled={!cvId}>
               <EditIcon fontSize="small" sx={{ mr: 1 }} />
               Edit
             </MenuItem>
-            <MenuItem onClick={handleView}>
+            <MenuItem onClick={handleView} disabled={!cvId}>
               <VisibilityIcon fontSize="small" sx={{ mr: 1 }} />
               Preview
             </MenuItem>
-            <MenuItem onClick={handleDownload}>
+            <MenuItem onClick={handleDownload} disabled={!cvId}>
               <DownloadIcon fontSize="small" sx={{ mr: 1 }} />
               Download PDF
             </MenuItem>
             <Divider />
-            <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+            <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }} disabled={!cvId}>
               <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
               Delete
             </MenuItem>
           </Menu>
         </Box>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {cv.personalInfo?.fullName || 'Unnamed'} • {cv.personalInfo?.jobTitle || 'No title'}
+          {fullName} • {jobTitle}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
-          Template: {cv.template.charAt(0).toUpperCase() + cv.template.slice(1)}
+          Template: {templateName}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
-          Last updated: {cv.updatedAt ? formatMonthYear(cv.updatedAt) : 'Not available'}
+          Last updated: {lastUpdated}
         </Typography>
+        
+        {/* Warning if CV is missing ID */}
+        {!cvId && (
+          <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
+            Warning: This CV has an invalid ID and cannot be edited or previewed.
+          </Typography>
+        )}
       </CardContent>
       <CardActions>
-        <Button size="small" startIcon={<EditIcon />} onClick={handleEdit}>
+        <Button size="small" startIcon={<EditIcon />} onClick={handleEdit} disabled={!cvId}>
           Edit
         </Button>
-        <Button size="small" startIcon={<VisibilityIcon />} onClick={handleView}>
+        <Button size="small" startIcon={<VisibilityIcon />} onClick={handleView} disabled={!cvId}>
           Preview
         </Button>
       </CardActions>

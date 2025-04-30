@@ -13,6 +13,8 @@ import {
   Divider,
   CircularProgress,
   Alert,
+  Card,
+  CardContent,
 } from '@mui/material';
 import {
   Save as SaveIcon,
@@ -37,6 +39,9 @@ import { ModernTemplate, ClassicTemplate } from '../components/cv/templates';
 import { fetchCV, createCV, updateCV, clearError, setCurrentCV } from '../store/slices/cvSlice';
 import { showNotification, setCurrentStep } from '../store/slices/uiSlice';
 
+// Import API service directly for direct communication
+import cvService from '../services/cvService';
+
 const steps = [
   'Choose Template',
   'Personal Info',
@@ -56,18 +61,41 @@ const CVEditor = () => {
   const { currentCV, isLoading, error } = useSelector((state) => state.cv);
   const { currentStep, selectedTemplate } = useSelector((state) => state.ui);
   const { user } = useSelector((state) => state.auth);
+  const [token, setToken] = useState(localStorage.getItem('token'));
   
-  const [isPreviewOpen ] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [debugInfo, setDebugInfo] = useState({});
+  const [directSaveAttempt, setDirectSaveAttempt] = useState(false);
   
   // Check if we're on the create route by path
   const isNewCV = location.pathname === '/cv/create';
   
-  console.log('Current path:', location.pathname);
-  console.log('ID from params:', id);
-  console.log('Is new CV?', isNewCV);
-  console.log('Current CV:', currentCV);
+  // Debug logging
+  useEffect(() => {
+    // Update debug info
+    setDebugInfo({
+      path: location.pathname,
+      idParam: id,
+      isNewCV,
+      userPresent: !!user,
+      userId: user?.id || 'Missing',
+      tokenPresent: !!token,
+      tokenLength: token ? token.length : 0,
+      cvPresent: !!currentCV,
+      cvId: currentCV?._id || 'None',
+    });
+    
+    console.log('==== CV EDITOR DEBUG INFO ====');
+    console.log('Path:', location.pathname);
+    console.log('ID from params:', id);
+    console.log('Is new CV?', isNewCV);
+    console.log('Current CV:', currentCV);
+    console.log('Current user:', user);
+    console.log('Auth token present:', !!token);
+    console.log('Auth token:', token?.substring(0, 15) + '...');
+  }, [location.pathname, id, isNewCV, currentCV, user, token]);
 
   const handleStepChange = (step) => {
     dispatch(setCurrentStep(step));
@@ -84,11 +112,11 @@ const CVEditor = () => {
           template: selectedTemplate || 'modern',
           userId: user?.id,
           personalInfo: {
-            fullName: 'Your Name',  // Using fullName for API compatibility
-            jobTitle: 'Your Title', // Using jobTitle for API compatibility
+            fullName: 'Your Name',
+            jobTitle: 'Your Title',
             email: user?.email || 'email@example.com',
             phone: '(123) 456-7890',
-            location: 'Your Location', // Using location for API compatibility
+            location: 'Your Location',
             linkedin: 'linkedin.com/in/yourprofile',
             website: 'yourwebsite.com',
           },
@@ -159,10 +187,77 @@ const CVEditor = () => {
         return 'Unknown step';
     }
   };
+  
+  // Alternative direct save method - bypasses Redux
+  const handleDirectSave = async () => {
+    if (!currentCV) return;
+    
+    console.log("Attempting direct save via API service...");
+    setDirectSaveAttempt(true);
+    setSaveLoading(true);
+    
+    try {
+      const cvToSave = {
+        ...currentCV,
+        userId: user?.id,
+        user: user?.id, // Try both formats
+        personalInfo: {
+          ...currentCV.personalInfo,
+          fullName: currentCV.personalInfo.fullName || currentCV.personalInfo.name || 'Your Name',
+          jobTitle: currentCV.personalInfo.jobTitle || currentCV.personalInfo.title || 'Your Title',
+          location: currentCV.personalInfo.location || currentCV.personalInfo.address || 'Your Location',
+        }
+      };
+      
+      console.log("Direct saving CV data:", JSON.stringify(cvToSave, null, 2));
+      
+      let result;
+      if (isNewCV) {
+        result = await cvService.createCV(cvToSave);
+      } else {
+        result = await cvService.updateCV(id, cvToSave);
+      }
+      
+      console.log("Direct save successful:", result);
+      dispatch(showNotification({
+        message: isNewCV ? 'CV created successfully' : 'CV updated successfully',
+        type: 'success',
+      }));
+      
+      // Update Redux state to match
+      dispatch(setCurrentCV(result));
+      
+      if (isNewCV && result?._id) {
+        navigate(`/cv/edit/${result._id}`);
+      }
+    } catch (error) {
+      console.error("Error in direct save:", error);
+      dispatch(showNotification({
+        message: `Error saving CV: ${error.message || 'Unknown error'}`,
+        type: 'error',
+      }));
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
-  // Handle save CV
+  // Handle save CV through Redux
   const handleSaveCV = async () => {
     if (!currentCV) return;
+    
+    console.log("==== SAVE CV OPERATION ====");
+    console.log("Current user:", user);
+    console.log("User ID:", user?.id);
+    console.log("Auth token:", token?.substring(0, 15) + '...');
+    
+    // Check for required user data
+    if (!user || !user.id) {
+      dispatch(showNotification({
+        message: 'Cannot save CV: User data is missing',
+        type: 'error',
+      }));
+      return;
+    }
     
     setSaveLoading(true);
     
@@ -172,6 +267,8 @@ const CVEditor = () => {
       // Make sure personalInfo has the correct field names expected by the API
       const cvToSave = {
         ...currentCV,
+        userId: user.id,
+        user: user.id, // Try both formats
         personalInfo: {
           ...currentCV.personalInfo,
           fullName: currentCV.personalInfo.fullName || currentCV.personalInfo.name || 'Your Name',
@@ -182,6 +279,7 @@ const CVEditor = () => {
       
       if (isNewCV) {
         try {
+          console.log("Dispatching createCV action...");
           const result = await dispatch(createCV(cvToSave)).unwrap();
           console.log("CV created successfully:", result);
           
@@ -193,10 +291,12 @@ const CVEditor = () => {
           if (result && result._id) {
             navigate(`/cv/edit/${result._id}`);
           } else {
+            console.warn("Created CV is missing _id, falling back to dashboard");
             navigate('/dashboard');
           }
         } catch (err) {
-          throw err; // Pass to outer catch block
+          console.error("Error in createCV:", err);
+          throw err;
         }
       } else {
         if (!id) {
@@ -209,15 +309,17 @@ const CVEditor = () => {
         }
         
         try {
-          await dispatch(updateCV({id, cvData: cvToSave})).unwrap();
-          console.log("CV updated successfully");
+          console.log("Dispatching updateCV action...");
+          const result = await dispatch(updateCV({id, cvData: cvToSave})).unwrap();
+          console.log("CV updated successfully:", result);
           
           dispatch(showNotification({
             message: 'CV updated successfully',
             type: 'success',
           }));
         } catch (err) {
-          throw err; // Pass to outer catch block
+          console.error("Error in updateCV:", err);
+          throw err;
         }
       }
     } catch (error) {
@@ -236,19 +338,26 @@ const CVEditor = () => {
         message: `Error saving CV: ${errorMessage}`,
         type: 'error',
       }));
+      
+      // If Redux save fails, try direct API save
+      if (!directSaveAttempt) {
+        console.log("Redux save failed, attempting direct save...");
+        await handleDirectSave();
+      }
     } finally {
       setSaveLoading(false);
     }
   };
 
-  // Handle preview toggle
-  // const togglePreview = () => {
-    // setIsPreviewOpen(!isPreviewOpen);
- // };
+  // Toggle in-page preview panel
+  const togglePreview = () => {
+    setIsPreviewOpen(!isPreviewOpen);
+  };
 
-  // Handle preview click
+  // Handle navigate to preview page
   const handlePreview = () => {
     if (currentCV && currentCV._id) {
+      console.log("Navigating to CV preview with ID:", currentCV._id);
       navigate(`/cv/preview/${currentCV._id}`);
     } else {
       dispatch(showNotification({
@@ -283,8 +392,7 @@ const CVEditor = () => {
     );
   }
 
-  // Create a complete preview data object that doesn't rely on currentCV
-  // Map API field names to template field names
+  // Create preview data with proper fallbacks
   const previewData = {
     personalInfo: {
       name: currentCV?.personalInfo?.fullName || currentCV?.personalInfo?.name || 'Your Name',
@@ -333,6 +441,48 @@ const CVEditor = () => {
 
   return (
     <Box>
+      {/* Debug Information */}
+      <Card sx={{ mb: 3, bgcolor: 'rgba(0,0,0,0.02)' }}>
+        <CardContent>
+          <Typography variant="subtitle2">System Status:</Typography>
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="body2">User ID: {user?.id || 'Missing'}</Typography>
+          <Typography variant="body2">CV ID: {currentCV?._id || 'Not yet saved'}</Typography>
+          <Typography variant="body2">Auth Token: {token ? '✓ Present' : '✗ Missing'}</Typography>
+          <Typography variant="body2">Template: {currentCV?.template || 'modern'}</Typography>
+          <Typography variant="body2">Route: {location.pathname}</Typography>
+          
+          <Box sx={{ mt: 2 }}>
+            <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={handleSaveCV}
+              disabled={saveLoading}
+              sx={{ mr: 1, mb: 1 }}
+            >
+              Try Redux Save
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={handleDirectSave}
+              disabled={saveLoading}
+              sx={{ mr: 1, mb: 1 }}
+            >
+              Try Direct Save
+            </Button>
+            <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={() => navigate('/dashboard')}
+              sx={{ mb: 1 }}
+            >
+              Back to Dashboard
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography variant="h4" component="h1">
@@ -342,10 +492,10 @@ const CVEditor = () => {
           <Button
             variant="outlined"
             startIcon={<VisibilityIcon />}
-            onClick={handlePreview}
+            onClick={togglePreview}
             sx={{ mr: 2 }}
           >
-            Preview
+            Toggle Preview
           </Button>
           <Button
             variant="contained"
@@ -372,7 +522,7 @@ const CVEditor = () => {
       {/* CV Editor with Preview */}
       <Grid container spacing={3}>
         {/* Editor Section */}
-        <Grid sx={{ width: isPreviewOpen ? { xs: '100%', md: '50%' } : '100%' }}>
+        <Grid item xs={12} md={isPreviewOpen ? 6 : 12}>
           <Paper elevation={2} sx={{ p: 0, overflow: 'hidden' }}>
             {/* Stepper */}
             <Box sx={{ p: 3, backgroundColor: 'grey.50' }}>
@@ -423,7 +573,7 @@ const CVEditor = () => {
 
         {/* Preview Section */}
         {isPreviewOpen && (
-          <Grid sx={{ width: { xs: '100%', md: '50%' } }}>
+          <Grid item xs={12} md={6}>
             <Paper elevation={2} sx={{ p: 3, height: '100%', overflow: 'auto' }}>
               <Typography variant="h6" gutterBottom>
                 CV Preview
