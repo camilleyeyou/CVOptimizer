@@ -17,6 +17,8 @@ import ForgotPasswordPage from './pages/Auth/ForgotPassword';
 import ResetPasswordPage from './pages/Auth/ResetPassword';
 import DirectCVCreatePage from './pages/DirectCVCreate';
 import PDFTester from './components/debug/PDFTester';
+import PDFDebug from './components/debug/PDFDebug';
+
 
 
 // Components
@@ -136,6 +138,9 @@ function App() {
             <Navigate to="/login" replace />
           )
         } />
+
+        <Route path="/debug/pdf/:id?" element={<PDFDebug />} />
+
         
         <Route path="/cv/edit/:id" element={
           isAuthenticated ? (
